@@ -1,0 +1,842 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark" />
+    <link rel="icon" href="data:," />
+    <title>AC北斗の拳 ガチ対戦動画アーカイブ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Archivo:wght@600;800&display=swap" rel="stylesheet" />
+    <style>
+      :root{
+        --bg:#0b0d10;
+        --bg2:#10131a;
+        --surface:#151922;
+        --surface2:#1b212e;
+        --border:#28303e;
+        --border-strong:#3a4457;
+        --text:#eef1f6;
+        --muted:#9aa7b8;
+        --muted2:#6d7a8c;
+        --red:#e63329;
+        --red-dark:#b91f18;
+        --gold:#f0b429;
+        --radius:14px;
+      }
+      *{ box-sizing:border-box; }
+      html{ scroll-behavior:smooth; }
+      body{
+        margin:0;
+        background:
+          radial-gradient(900px 480px at 85% -120px, rgba(230,51,41,.14), transparent 60%),
+          radial-gradient(700px 420px at -10% 0, rgba(240,180,41,.07), transparent 55%),
+          var(--bg);
+        color:var(--text);
+        font-family:"Noto Sans JP", system-ui, -apple-system, "Hiragino Kaku Gothic ProN", sans-serif;
+        line-height:1.6;
+        -webkit-font-smoothing:antialiased;
+      }
+      button, select, input{ font:inherit; color:inherit; }
+      button{ cursor:pointer; }
+      :focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+
+      .wrap{ max-width:1180px; margin:0 auto; padding:0 16px 64px; }
+
+      /* ---------- Intro ---------- */
+      .intro{ padding:28px 0 6px; }
+      .intro h1{
+        font-size:clamp(24px, 4.6vw, 38px);
+        font-weight:900; letter-spacing:.02em; line-height:1.25; margin:0 0 8px;
+        line-break:strict; word-break:auto-phrase; text-wrap:balance;
+      }
+      .intro h1 .accent{ color:var(--red); }
+      .intro p{
+        margin:0; color:var(--muted); font-size:14.5px; line-height:1.85;
+        max-width:none;
+        line-break:strict; word-break:auto-phrase; text-wrap:pretty;
+      }
+      .intro .meta-line{
+        margin-top:10px; font-size:12.5px; color:var(--muted2);
+        display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 8px;
+      }
+      .intro .meta-line a{ color:var(--muted); text-underline-offset:3px; white-space:nowrap; }
+      .nb{ white-space:nowrap; }
+
+      /* ---------- Filter panel ---------- */
+      .panel{
+        margin-top:20px;
+        background:linear-gradient(180deg, var(--surface2), var(--surface));
+        border:1px solid var(--border);
+        border-radius:var(--radius);
+        padding:18px 18px 14px;
+      }
+      .panel-head{
+        display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px;
+        margin-bottom:6px;
+      }
+      .panel-head h2{ font-size:17px; font-weight:900; margin:0; letter-spacing:.03em; }
+      .panel-head .hint{ font-size:12.5px; color:var(--muted); }
+
+      .mode-switch{
+        display:inline-flex; background:var(--bg2); border:1px solid var(--border);
+        border-radius:999px; padding:3px; gap:2px; margin-left:auto;
+      }
+      .mode-switch button{
+        border:0; background:transparent; color:var(--muted);
+        border-radius:999px; padding:7px 14px; min-height:38px;
+        font-size:13px; font-weight:700; white-space:nowrap;
+      }
+      .mode-switch button[aria-pressed="true"]{ background:var(--red); color:#fff; }
+
+      .matchup{
+        display:grid; grid-template-columns:1fr auto 1fr; gap:8px 14px; align-items:start;
+        margin-top:10px;
+      }
+      .vs-badge{
+        align-self:center; justify-self:center;
+        font-family:"Archivo", sans-serif; font-weight:800; font-style:italic;
+        font-size:26px; color:var(--gold);
+        border:2px solid var(--gold); border-radius:50%;
+        width:56px; height:56px; display:grid; place-items:center;
+        background:rgba(240,180,41,.08);
+        margin-top:26px;
+      }
+      .side-label{
+        display:flex; align-items:baseline; gap:8px; margin-bottom:8px;
+      }
+      .side-label .tag{
+        font-family:"Archivo", sans-serif; font-weight:800; font-size:12px; letter-spacing:.08em;
+        background:var(--bg2); border:1px solid var(--border-strong); color:var(--text);
+        border-radius:6px; padding:2px 8px;
+      }
+      .side-label .name{ font-weight:700; font-size:14px; }
+      .side-label .picked{ font-size:12.5px; color:var(--gold); font-weight:700; }
+
+      .chips{ display:flex; flex-wrap:wrap; gap:7px; }
+      .chip{
+        display:inline-flex; align-items:center; gap:7px;
+        min-height:40px; padding:7px 12px;
+        background:var(--bg2); border:1.5px solid var(--border);
+        border-radius:999px; color:var(--text);
+        font-size:13.5px; font-weight:700; line-height:1;
+        transition:border-color .12s, background .12s;
+      }
+      .chip .dot{ width:10px; height:10px; border-radius:50%; background:var(--c,#888); flex:none; box-shadow:0 0 0 2px rgba(255,255,255,.08); }
+      .chip .cnt{ font-size:11px; color:var(--muted2); font-weight:500; }
+      .chip:hover{ border-color:var(--border-strong); }
+      .chip[aria-pressed="true"]{
+        border-color:var(--c); background:color-mix(in srgb, var(--c) 16%, var(--bg2));
+        box-shadow:0 0 0 1px var(--c) inset;
+      }
+      .chip[aria-pressed="true"] .cnt{ color:var(--muted); }
+
+      .sub-filters{
+        display:grid; grid-template-columns:1fr 1fr; gap:10px;
+        margin-top:18px; padding-top:16px; border-top:1px dashed var(--border);
+        align-items:end;
+      }
+      .field label{ display:block; font-size:12px; font-weight:700; color:var(--muted); margin-bottom:5px; letter-spacing:.04em; }
+      .field input[type="search"], .field select{
+        width:100%; min-height:44px; padding:9px 12px;
+        background:var(--bg2); border:1px solid var(--border); border-radius:10px;
+        font-size:14.5px; color:var(--text);
+      }
+      .field input[type="search"]::placeholder{ color:var(--muted2); }
+
+      /* ---------- Status bar ---------- */
+      .statusbar{
+        position:sticky; top:0; z-index:20;
+        margin-top:16px;
+        display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px;
+        background:rgba(13,16,22,.92); backdrop-filter:blur(8px);
+        border:1px solid var(--border); border-radius:12px;
+        padding:10px 14px;
+      }
+      .statusbar .conds{ display:flex; flex-wrap:wrap; gap:6px; align-items:center; font-size:13.5px; }
+      .statusbar .conds .lbl{ color:var(--muted); font-size:12.5px; font-weight:700; }
+      .cond-pill{
+        display:inline-flex; align-items:center; gap:6px;
+        background:var(--surface2); border:1px solid var(--border-strong);
+        border-radius:999px; padding:3px 10px; font-weight:700; font-size:13px;
+      }
+      .cond-pill .dot{ width:8px; height:8px; border-radius:50%; background:var(--c,#888); }
+      .cond-none{ color:var(--muted); font-size:13.5px; }
+      .hit-count{ margin-left:auto; font-size:14px; }
+      .hit-count strong{ font-family:"Archivo", sans-serif; font-size:21px; font-weight:800; color:var(--gold); margin-right:2px; }
+      .reset-btn{
+        min-height:40px; padding:8px 16px;
+        background:transparent; border:1.5px solid var(--red); color:#ff8a80;
+        border-radius:10px; font-weight:700; font-size:13.5px;
+      }
+      .reset-btn:hover{ background:rgba(230,51,41,.12); }
+      .reset-btn:disabled{ opacity:.35; cursor:default; }
+      .reset-btn:disabled:hover{ background:transparent; }
+
+      /* ---------- Cards ---------- */
+      .grid{
+        display:grid; grid-template-columns:1fr; gap:18px; margin-top:20px;
+      }
+      @media (min-width:640px){ .grid{ grid-template-columns:repeat(2,1fr); } }
+      @media (min-width:1024px){ .grid{ grid-template-columns:repeat(3,1fr); } }
+
+      .card{
+        display:flex; flex-direction:column;
+        background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+        overflow:hidden; text-decoration:none; color:var(--text);
+        transition:border-color .15s, transform .15s;
+      }
+      .card:hover{ border-color:var(--border-strong); transform:translateY(-2px); }
+      .thumb{ position:relative; aspect-ratio:16/9; background:#05070a; flex:none; }
+      .thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
+      .thumb .no-thumb{
+        position:absolute; inset:0; display:none; place-items:center;
+        color:var(--muted2); font-size:13px; font-weight:700; letter-spacing:.06em;
+        background:repeating-linear-gradient(45deg, #0d1017 0 14px, #0a0d12 14px 28px);
+      }
+      .thumb.broken img{ display:none; }
+      .thumb.broken .no-thumb{ display:grid; }
+      .thumb::after{
+        content:"▶"; position:absolute; right:10px; bottom:10px;
+        width:38px; height:38px; border-radius:50%;
+        background:rgba(230,51,41,.92); color:#fff;
+        display:grid; place-items:center; font-size:14px; padding-left:2px;
+        box-shadow:0 4px 14px rgba(0,0,0,.5);
+      }
+      .badge{
+        position:absolute; font-size:11.5px; font-weight:900; letter-spacing:.04em;
+        border-radius:6px; padding:3px 8px; line-height:1.35;
+      }
+      .badge-fmt{ top:10px; left:10px; background:var(--red); color:#fff; }
+      .badge-mirror{ top:10px; right:10px; background:var(--gold); color:#1a1405; }
+      .badge-ts{ left:10px; bottom:10px; background:rgba(5,7,10,.85); color:#ffd97a; border:1px solid rgba(240,180,41,.5); font-family:"Archivo", sans-serif; font-weight:600; }
+
+      .card-body{ padding:14px 16px 16px; display:flex; flex-direction:column; gap:10px; flex:1; }
+      .card-meta{ display:flex; flex-wrap:wrap; gap:4px 12px; font-size:12.5px; color:var(--muted); }
+      .card-meta .date{ font-family:"Archivo", sans-serif; font-weight:600; color:var(--text); letter-spacing:.03em; }
+      .card-meta .venue::before{ content:"📍 "; }
+      .matchup-line{ display:flex; flex-direction:column; gap:7px; }
+      .player{ display:flex; align-items:center; gap:8px; min-width:0; }
+      .player .pname{ font-weight:700; font-size:15.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+      .char-tag{
+        flex:none; display:inline-flex; align-items:center; gap:5px;
+        font-size:11.5px; font-weight:700; line-height:1;
+        border:1px solid var(--c); color:var(--text);
+        background:color-mix(in srgb, var(--c) 18%, transparent);
+        border-radius:5px; padding:4px 7px;
+      }
+      .char-tag .dot{ width:7px; height:7px; border-radius:50%; background:var(--c); }
+      .vs-row{
+        display:flex; align-items:center; gap:10px; color:var(--muted2);
+        font-family:"Archivo", sans-serif; font-weight:800; font-style:italic; font-size:12px; letter-spacing:.14em;
+      }
+      .vs-row::before, .vs-row::after{ content:""; flex:1; border-top:1px solid var(--border); }
+      .card-foot{ margin-top:auto; font-size:12.5px; color:var(--muted); display:flex; justify-content:space-between; align-items:center; }
+      .card-foot .watch{ color:#ff8a80; font-weight:700; }
+
+      .empty{
+        display:none; margin-top:20px; text-align:center; padding:48px 20px;
+        border:1px dashed var(--border-strong); border-radius:var(--radius); color:var(--muted);
+      }
+      .empty strong{ display:block; color:var(--text); font-size:16px; margin-bottom:6px; }
+      .empty button{
+        margin-top:14px; min-height:42px; padding:9px 18px;
+        background:var(--red); border:0; color:#fff; border-radius:10px; font-weight:700;
+      }
+
+      /* ---------- Loading / load error ---------- */
+      .loading{
+        margin-top:20px; padding:52px 20px;
+        border:1px dashed var(--border-strong); border-radius:var(--radius); color:var(--muted);
+        display:flex; flex-direction:column; align-items:center; gap:16px; font-size:14px;
+      }
+      .loading[hidden], .load-error[hidden]{ display:none; }
+      .spinner{
+        width:36px; height:36px; border-radius:50%;
+        border:3px solid var(--border-strong); border-top-color:var(--red);
+        animation:spin .9s linear infinite;
+      }
+      @keyframes spin{ to{ transform:rotate(360deg); } }
+      .load-error{
+        margin-top:20px; text-align:center; padding:48px 20px;
+        border:1px dashed var(--red); border-radius:var(--radius); color:var(--muted);
+      }
+      .load-error strong{ display:block; color:var(--text); font-size:16px; margin-bottom:6px; }
+      .load-error button{
+        margin-top:14px; min-height:42px; padding:9px 18px;
+        background:var(--red); border:0; color:#fff; border-radius:10px; font-weight:700;
+      }
+
+      /* ---------- Combo search (char x player per side) ---------- */
+      .combo{ margin-top:10px; }
+      .combo h3{ font-size:14.5px; font-weight:900; margin:0 0 4px; letter-spacing:.03em; }
+      .combo .combo-hint{ font-size:12.5px; color:var(--muted); margin:0 0 12px; }
+      .combo-grid{ display:grid; grid-template-columns:1fr auto 1fr; gap:8px 14px; align-items:stretch; }
+      .combo-side{ background:var(--bg2); border:1px solid var(--border); border-radius:10px; padding:12px 12px 14px; display:flex; flex-direction:column; gap:10px; }
+      .combo-side .side-label{ margin-bottom:0; }
+      .combo-side label{ display:block; font-size:12px; font-weight:700; color:var(--muted); margin-bottom:5px; letter-spacing:.04em; }
+      .combo-side select, .combo-side input[type="text"]{
+        width:100%; min-height:44px; padding:9px 12px;
+        background:var(--surface); border:1px solid var(--border); border-radius:10px;
+        font-size:14.5px; color:var(--text);
+      }
+      .combo-side input[type="text"]::placeholder{ color:var(--muted2); }
+      .combo-vs{
+        align-self:center; justify-self:center;
+        font-family:"Archivo", sans-serif; font-weight:800; font-style:italic;
+        font-size:18px; color:var(--gold);
+        border:2px solid var(--gold); border-radius:50%;
+        width:44px; height:44px; display:grid; place-items:center;
+        background:rgba(240,180,41,.08);
+      }
+
+      /* ---------- Player name suggestions ---------- */
+      .suggest-wrap{ position:relative; }
+      .suggest{
+        position:absolute; left:0; right:0; top:calc(100% + 4px); z-index:50;
+        background:var(--surface2); border:1px solid var(--border-strong); border-radius:10px;
+        overflow:hidden auto; box-shadow:0 14px 34px rgba(0,0,0,.55);
+        max-height:320px;
+      }
+      .suggest-item{
+        display:flex; align-items:center; gap:8px; width:100%;
+        padding:11px 12px; min-height:44px;
+        background:transparent; border:0; border-bottom:1px solid var(--border);
+        text-align:left; font-size:14px; color:var(--text);
+      }
+      .suggest-item:last-child{ border-bottom:0; }
+      .suggest-item:hover, .suggest-item.active{ background:var(--surface); }
+      .suggest-item .s-name{ font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+      .suggest-item .s-chars{ margin-left:auto; display:inline-flex; gap:4px; flex:none; }
+      .suggest-item .s-cnt{ font-size:11.5px; color:var(--muted2); flex:none; }
+
+      /* ---------- YouTube title on card ---------- */
+      .yt-title{
+        font-size:12px; color:var(--muted2); line-height:1.55;
+        display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+      }
+      .yt-title .yt-label{ color:#ff8a80; font-weight:700; margin-right:5px; }
+
+      footer{ margin-top:44px; padding-top:18px; border-top:1px solid var(--border); font-size:12.5px; color:var(--muted2); }
+      footer a{ color:var(--muted); text-underline-offset:3px; }
+
+      @media (max-width:760px){
+        .matchup{ grid-template-columns:1fr; }
+        .vs-badge{ margin:2px 0; width:46px; height:46px; font-size:20px; justify-self:start; }
+        .sub-filters{ grid-template-columns:1fr 1fr; }
+        .combo-grid{ grid-template-columns:1fr; }
+        .combo-vs{ justify-self:start; width:38px; height:38px; font-size:15px; }
+        .field.search-field{ grid-column:1 / -1; }
+        .mode-switch{ margin-left:0; }
+        .hit-count{ margin-left:0; }
+      }
+      @media (prefers-reduced-motion: reduce){
+        html{ scroll-behavior:auto; }
+        .card{ transition:none; }
+        .spinner{ animation:none; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="intro">
+        <h1>AC北斗の拳 <span class="accent">ガチ対戦動画</span>アーカイブ</h1>
+        <p>AC北斗の拳の10先・5先などのガチ対戦動画をまとめたアーカイブです。各カードにはYouTubeの動画タイトルも併記しています。カードを選ぶとYouTubeの動画へ飛びます<span class="nb">（開始位置つきのものはその場面から再生されます）</span>。</p>
+        <p class="meta-line"><span>元データ：<a href="https://docs.google.com/spreadsheets/d/1uQnB9SnALifBEAX2WOhgL3mPCzSNtpHXLwfBXUYC8nk/edit?usp=drivesdk" target="_blank" rel="noopener">Googleスプレッドシート</a>（シートの更新内容は自動で反映されます）</span></p>
+      </header>
+
+      <section class="panel" aria-label="絞り込み">
+        <div class="panel-head">
+          <h2>対戦相手で絞り込む</h2>
+          <span class="hint">サイドA／Bそれぞれにキャラとプレイヤー名を指定できます。キャラだけ、名前だけ、片サイドだけの指定もでき、左右は不問です</span>
+        </div>
+
+        <div class="combo">
+          <p class="combo-hint">プレイヤー名は途中まで入力すると候補が表示されます。</p>
+          <div class="combo-grid">
+            <div class="combo-side">
+              <div class="side-label"><span class="tag">SIDE A</span><span class="name">サイドA</span></div>
+              <div>
+                <label for="combo-char-a">キャラ</label>
+                <select id="combo-char-a"><option value="">指定なし</option></select>
+              </div>
+              <div>
+                <label for="combo-name-a">プレイヤー名</label>
+                <div class="suggest-wrap">
+                  <input type="text" id="combo-name-a" placeholder="プレイヤー名を入力" autocomplete="off" />
+                  <div class="suggest" hidden></div>
+                </div>
+              </div>
+            </div>
+            <div class="combo-vs" aria-hidden="true">VS</div>
+            <div class="combo-side">
+              <div class="side-label"><span class="tag">SIDE B</span><span class="name">サイドB</span></div>
+              <div>
+                <label for="combo-char-b">キャラ</label>
+                <select id="combo-char-b"><option value="">指定なし</option></select>
+              </div>
+              <div>
+                <label for="combo-name-b">プレイヤー名</label>
+                <div class="suggest-wrap">
+                  <input type="text" id="combo-name-b" placeholder="プレイヤー名を入力" autocomplete="off" />
+                  <div class="suggest" hidden></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sub-filters">
+          <div class="field">
+            <label for="fmt">形式</label>
+            <select id="fmt"><option value="">すべて</option></select>
+          </div>
+          <div class="field">
+            <label for="venue">開催店舗</label>
+            <select id="venue"><option value="">すべて</option></select>
+          </div>
+        </div>
+      </section>
+
+      <div class="statusbar" role="status" aria-live="polite">
+        <div class="conds" id="conds"></div>
+        <div class="hit-count"><strong id="hit-num">–</strong>件ヒット</div>
+        <button type="button" class="reset-btn" id="reset">条件をリセット</button>
+      </div>
+
+      <main>
+        <div class="loading" id="loading">
+          <div class="spinner" aria-hidden="true"></div>
+          <span>データを読み込んでいます…</span>
+        </div>
+        <div class="load-error" id="load-error" hidden>
+          <strong>データを読み込めませんでした</strong>
+          時間をおいて再読み込みしてください。
+          <br /><button type="button" id="retry">再読み込み</button>
+        </div>
+        <div class="grid" id="grid"></div>
+        <div class="empty" id="empty">
+          <strong>条件に合う動画がありません</strong>
+          キャラの組み合わせや形式を変えてみてください。
+          <br /><button type="button" id="empty-reset">条件をリセットする</button>
+        </div>
+      </main>
+
+      <footer>
+        データ元：<a href="https://docs.google.com/spreadsheets/d/1uQnB9SnALifBEAX2WOhgL3mPCzSNtpHXLwfBXUYC8nk/edit?usp=drivesdk" target="_blank" rel="noopener">AC北斗の拳 ガチ対戦動画アーカイブ（Googleスプレッドシート）</a>／ サムネイルと動画タイトルは各YouTube動画のものです。スプレッドシートを更新すると、このページにも自動で反映されます。
+      </footer>
+    </div>
+
+    <script>
+      var CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSTc23eXmAJr4Ba8Kgw0kzffFtWSmEEJ_kxQ_EEEuSlZ66jN7vHE7NTUBReBEdnBduvIfnGFaqRKc4z/pub?output=csv";
+
+      var CHARS = {
+        KE: { name: "ケンシロウ", color: "#5aa9ff" },
+        RA: { name: "ラオウ",     color: "#f0b429" },
+        TO: { name: "トキ",       color: "#e8edf5" },
+        JA: { name: "ジャギ",     color: "#ff6b4a" },
+        SH: { name: "シン",       color: "#ff8fb2" },
+        RE: { name: "レイ",       color: "#69db7c" },
+        JU: { name: "ユダ",       color: "#b197fc" },
+        TH: { name: "サウザー",   color: "#ff5252" },
+        HE: { name: "ハート様",   color: "#ffa94d" },
+        MA: { name: "マミヤ",     color: "#3fd9c0" }
+      };
+      var CHAR_ORDER = ["KE","RA","TO","JA","SH","RE","JU","TH","HE","MA"];
+      var NAME2CODE = {};
+      CHAR_ORDER.forEach(function(code){ NAME2CODE[CHARS[code].name] = code; });
+
+      var VIDEOS = [];
+      var PLAYERS = [];
+      var loaded = false;
+
+      var state = { fmt: "", venue: "", ca: { char: "", name: "" }, cb: { char: "", name: "" } };
+
+      function isMirror(v){
+        return v.c1.length === 1 && v.c2.length === 1 && v.c1[0] === v.c2[0];
+      }
+      function fmtDate(raw){
+        var m = String(raw).match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
+        if (m) return m[1] + "/" + Number(m[2]) + "/" + Number(m[3]);
+        return String(raw);
+      }
+      function fmtTime(sec){
+        var h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
+        function pad(n){ return (n < 10 ? "0" : "") + n; }
+        return h > 0 ? h + ":" + pad(m) + ":" + pad(s) : m + ":" + pad(s);
+      }
+      function esc(s){
+        return String(s).replace(/[&<>"']/g, function(c){
+          return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c];
+        });
+      }
+
+      /* ---------- CSV parsing (quote-aware) ---------- */
+      function parseCSV(text){
+        var rows = [], row = [], field = "", inQ = false, i, c;
+        for (i = 0; i < text.length; i++){
+          c = text.charAt(i);
+          if (inQ){
+            if (c === '"'){
+              if (text.charAt(i + 1) === '"'){ field += '"'; i++; }
+              else inQ = false;
+            } else field += c;
+          } else {
+            if (c === '"') inQ = true;
+            else if (c === ","){ row.push(field); field = ""; }
+            else if (c === "\n"){ row.push(field); field = ""; rows.push(row); row = []; }
+            else if (c !== "\r") field += c;
+          }
+        }
+        if (field !== "" || row.length){ row.push(field); rows.push(row); }
+        return rows;
+      }
+
+      function parseVideoUrl(url){
+        var m = String(url).match(/(?:youtu\.be\/|\/live\/|[?&]v=)([\w-]{11})/);
+        var t = 0;
+        var tm = String(url).match(/[?&]t=([^&]+)/);
+        if (tm){
+          var raw = tm[1];
+          if (/^\d+$/.test(raw)) t = parseInt(raw, 10);
+          else {
+            var h = /(\d+)h/.exec(raw), mi = /(\d+)m/.exec(raw), s = /(\d+)s/.exec(raw);
+            t = (h ? Number(h[1]) * 3600 : 0) + (mi ? Number(mi[1]) * 60 : 0) + (s ? Number(s[1]) : 0);
+          }
+        }
+        return { id: m ? m[1] : "", t: t };
+      }
+
+      // キャラ略号を正規化（&分割、日本語名や "RAorRE" のような表記ゆれも吸収）
+      function normChars(s){
+        var out = [];
+        function push(code){ if (CHARS[code] && out.indexOf(code) < 0) out.push(code); }
+        String(s || "").split("&").forEach(function(tok){
+          tok = tok.trim();
+          if (!tok) return;
+          if (CHARS[tok]) push(tok);
+          else if (NAME2CODE[tok]) push(NAME2CODE[tok]);
+          else if (/^[A-Z]+or[A-Z]+$/.test(tok)) tok.split("or").forEach(push);
+        });
+        return out;
+      }
+
+      function buildVideos(rows){
+        var list = [];
+        rows.forEach(function(r, idx){
+          if (!r || r.length < 9) return;
+          var p1 = String(r[2] || "").trim();
+          var url = String(r[8] || "").trim();
+          // データ行の判定：1Pプレイヤー名があり、動画リンクがURLである行
+          if (!p1 || url.indexOf("http") !== 0) return;
+          var vi = parseVideoUrl(url);
+          var dm = String(r[1] || "").trim().match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
+          list.push({
+            d: String(r[1] || "").trim(),
+            sortKey: dm ? (Number(dm[1]) * 10000 + Number(dm[2]) * 100 + Number(dm[3])) : -1,
+            ord: idx,
+            p1: p1, c1: normChars(r[3]),
+            p2: String(r[4] || "").trim(), c2: normChars(r[5]),
+            fmt: String(r[6] || "").trim(), venue: String(r[7] || "").trim(),
+            url: url, id: vi.id, t: vi.t
+          });
+        });
+        // 開催日の新しい順。同日はシートの元の順序を維持。日付として読めない行は末尾に元の順序で残す
+        list.sort(function(a, b){
+          if (a.sortKey !== b.sortKey) return b.sortKey - a.sortKey;
+          return a.ord - b.ord;
+        });
+        return list;
+      }
+
+      function buildPlayers(){
+        var map = {};
+        function add(name, chars){
+          name = String(name).trim();
+          if (!name) return;
+          if (!map[name]) map[name] = { name: name, chars: [], count: 0 };
+          map[name].count++;
+          chars.forEach(function(c){ if (map[name].chars.indexOf(c) < 0) map[name].chars.push(c); });
+        }
+        VIDEOS.forEach(function(v){
+          [[v.p1, v.c1], [v.p2, v.c2]].forEach(function(pair){
+            var names = pair[0].split("&"), chars = pair[1];
+            if (names.length > 1 && names.length === chars.length){
+              names.forEach(function(n, i){ add(n, [chars[i]]); });
+            } else {
+              names.forEach(function(n){ add(n, chars); });
+            }
+          });
+        });
+        return Object.keys(map).map(function(k){ return map[k]; }).sort(function(x, y){
+          return y.count - x.count || x.name.localeCompare(y.name, "ja");
+        });
+      }
+
+      /* ---------- YouTube titles via oEmbed (concurrency-limited, cached) ---------- */
+      var TITLES = {};
+      try {
+        var cachedTitles = localStorage.getItem("hokutoYtTitlesV1");
+        if (cachedTitles) TITLES = JSON.parse(cachedTitles) || {};
+      } catch (e) { TITLES = {}; }
+      var titleState = {};   // id -> queued | loading | done | failed
+      var titleQueue = [];
+      var titleActive = 0;
+
+      function saveTitles(){
+        try { localStorage.setItem("hokutoYtTitlesV1", JSON.stringify(TITLES)); } catch (e) {}
+      }
+      function applyTitle(id){
+        var title = TITLES[id];
+        if (!title) return;
+        var slots = document.querySelectorAll('[data-yt-slot="' + id + '"]');
+        Array.prototype.forEach.call(slots, function(el){
+          el.innerHTML = '<span class="yt-label">YouTube</span>' + esc(title);
+          el.setAttribute("title", title);
+          el.style.display = "";
+        });
+      }
+      function pumpTitles(){
+        while (titleActive < 4 && titleQueue.length){
+          var id = titleQueue.shift();
+          titleActive++;
+          titleState[id] = "loading";
+          fetch("https://www.youtube.com/oembed?url=" + encodeURIComponent("https://www.youtube.com/watch?v=" + id) + "&format=json")
+            .then(function(r){ if (!r.ok) throw new Error("oembed failed"); return r.json(); })
+            .then(function(j){
+              if (j && j.title){ TITLES[id] = j.title; saveTitles(); applyTitle(id); }
+              titleState[id] = "done";
+            })
+            .catch(function(){ titleState[id] = "failed"; })
+            .then(function(){ titleActive--; pumpTitles(); });
+        }
+      }
+      function ensureTitle(id){
+        if (!id) return;
+        if (TITLES[id]){ applyTitle(id); return; }
+        if (titleState[id]) return;
+        titleState[id] = "queued";
+        titleQueue.push(id);
+        pumpTitles();
+      }
+
+      /* ---------- selects ---------- */
+      function fillSelect(id, values){
+        var sel = document.getElementById(id);
+        while (sel.options.length > 1) sel.remove(1);
+        values.forEach(function(v){
+          var o = document.createElement("option");
+          o.value = v; o.textContent = v;
+          sel.appendChild(o);
+        });
+      }
+      function fillFilterSelects(){
+        var fmts = [], venues = [];
+        VIDEOS.forEach(function(v){
+          if (v.fmt && fmts.indexOf(v.fmt) < 0) fmts.push(v.fmt);
+          if (v.venue && venues.indexOf(v.venue) < 0) venues.push(v.venue);
+        });
+        fillSelect("fmt", fmts);
+        fillSelect("venue", venues);
+      }
+
+      /* ---------- filtering ---------- */
+      function matches(v){
+        if (state.fmt && v.fmt !== state.fmt) return false;
+        if (state.venue && v.venue !== state.venue) return false;
+        var ca = state.ca, cb = state.cb;
+        if (ca.char || ca.name || cb.char || cb.name){
+          var sideHit = function(chars, pname, cond){
+            if (cond.char && chars.indexOf(cond.char) < 0) return false;
+            if (cond.name && pname.toLowerCase().indexOf(cond.name.toLowerCase()) < 0) return false;
+            return true;
+          };
+          var ab = sideHit(v.c1, v.p1, ca) && sideHit(v.c2, v.p2, cb);
+          var ba = sideHit(v.c1, v.p1, cb) && sideHit(v.c2, v.p2, ca);
+          if (!ab && !ba) return false;
+        }
+        return true;
+      }
+
+      /* ---------- rendering ---------- */
+      function charTags(codes){
+        return codes.map(function(code){
+          var c = CHARS[code];
+          if (!c) return "";
+          return '<span class="char-tag" style="--c:' + c.color + '"><span class="dot"></span>' + esc(c.name) + "</span>";
+        }).join("");
+      }
+      function cardHTML(v){
+        var mirror = isMirror(v);
+        var ts = v.t ? '<span class="badge badge-ts">' + fmtTime(v.t) + "〜</span>" : "";
+        var title = v.p1 + "（" + v.c1.map(function(c){ return CHARS[c] ? CHARS[c].name : c; }).join("・") + "） vs " +
+                    v.p2 + "（" + v.c2.map(function(c){ return CHARS[c] ? CHARS[c].name : c; }).join("・") + "） " + v.fmt;
+        var thumb = v.id
+          ? '<img src="https://i.ytimg.com/vi/' + v.id + '/hqdefault.jpg" alt="" loading="lazy" onerror="this.parentNode.classList.add(\'broken\')" />'
+          : "";
+        return '<a class="card" href="' + esc(v.url) + '" target="_blank" rel="noopener" aria-label="' + esc(title) + '">' +
+          '<div class="thumb' + (v.id ? "" : " broken") + '">' +
+            thumb +
+            '<span class="no-thumb">NO THUMBNAIL</span>' +
+            '<span class="badge badge-fmt">' + esc(v.fmt) + "</span>" +
+            (mirror ? '<span class="badge badge-mirror">☆ 同キャラ戦</span>' : "") +
+            ts +
+          "</div>" +
+          '<div class="card-body">' +
+            '<div class="card-meta"><span class="date">' + esc(fmtDate(v.d)) + '</span><span class="venue">' + esc(v.venue) + "</span></div>" +
+            '<div class="matchup-line">' +
+              '<div class="player"><span class="pname">' + esc(v.p1) + "</span>" + charTags(v.c1) + "</div>" +
+              '<div class="vs-row">VS</div>' +
+              '<div class="player"><span class="pname">' + esc(v.p2) + "</span>" + charTags(v.c2) + "</div>" +
+            "</div>" +
+            '<div class="yt-title" data-yt-slot="' + esc(v.id) + '" style="display:none"></div>' +
+            '<div class="card-foot"><span>' + esc(v.fmt) + (mirror ? " ・ 同キャラ戦" : "") + '</span><span class="watch">YouTubeで見る →</span></div>' +
+          "</div></a>";
+      }
+
+      function render(){
+        var list = VIDEOS.filter(matches);
+        document.getElementById("grid").innerHTML = list.map(cardHTML).join("");
+        document.getElementById("empty").style.display = (loaded && !list.length) ? "block" : "none";
+        document.getElementById("hit-num").textContent = loaded ? list.length : "–";
+
+        // 表示中カードのYouTubeタイトルを段階的に取得・反映
+        var seen = {};
+        list.forEach(function(v){
+          if (v.id && !seen[v.id]){ seen[v.id] = true; ensureTitle(v.id); }
+        });
+
+        var conds = [];
+        [["サイドA", state.ca], ["サイドB", state.cb]].forEach(function(pair){
+          var cond = pair[1];
+          if (cond.char || cond.name){
+            var txt = pair[0] + "：";
+            if (cond.name) txt += cond.name;
+            if (cond.char) txt += (cond.name ? "（" : "") + CHARS[cond.char].name + (cond.name ? "）" : "");
+            conds.push('<span class="cond-pill">' + esc(txt) + "</span>");
+          }
+        });
+        if (state.fmt) conds.push('<span class="cond-pill">形式：' + esc(state.fmt) + "</span>");
+        if (state.venue) conds.push('<span class="cond-pill">店舗：' + esc(state.venue) + "</span>");
+
+        var hasCond = !!(state.fmt || state.venue || state.ca.char || state.ca.name || state.cb.char || state.cb.name);
+        document.getElementById("conds").innerHTML =
+          '<span class="lbl">現在の条件</span>' + (hasCond ? conds.join("") : '<span class="cond-none">指定なし（全件表示）</span>');
+        document.getElementById("reset").disabled = !hasCond;
+      }
+
+      function resetAll(){
+        state.fmt = ""; state.venue = "";
+        state.ca = { char: "", name: "" }; state.cb = { char: "", name: "" };
+        document.getElementById("fmt").value = "";
+        document.getElementById("venue").value = "";
+        document.getElementById("combo-char-a").value = "";
+        document.getElementById("combo-char-b").value = "";
+        document.getElementById("combo-name-a").value = "";
+        document.getElementById("combo-name-b").value = "";
+        render();
+      }
+
+      document.getElementById("fmt").addEventListener("change", function(e){ state.fmt = e.target.value; render(); });
+      document.getElementById("venue").addEventListener("change", function(e){ state.venue = e.target.value; render(); });
+      document.getElementById("reset").addEventListener("click", resetAll);
+      document.getElementById("empty-reset").addEventListener("click", resetAll);
+
+      /* ---------- combo (char x player) selects ---------- */
+      ["combo-char-a", "combo-char-b"].forEach(function(id){
+        var sel = document.getElementById(id);
+        CHAR_ORDER.forEach(function(code){
+          var o = document.createElement("option");
+          o.value = code; o.textContent = CHARS[code].name;
+          sel.appendChild(o);
+        });
+      });
+      document.getElementById("combo-char-a").addEventListener("change", function(e){ state.ca.char = e.target.value; render(); });
+      document.getElementById("combo-char-b").addEventListener("change", function(e){ state.cb.char = e.target.value; render(); });
+
+      /* ---------- player name suggestions ---------- */
+      function attachSuggest(inputId, onPick){
+        var input = document.getElementById(inputId);
+        var box = input.parentNode.querySelector(".suggest");
+        var activeIdx = -1;
+        function close(){ box.hidden = true; box.innerHTML = ""; activeIdx = -1; }
+        function open(){
+          var q = input.value.trim().toLowerCase();
+          if (!q){ close(); return; }
+          var cands = PLAYERS.filter(function(p){ return p.name.toLowerCase().indexOf(q) >= 0; }).slice(0, 8);
+          if (!cands.length){ close(); return; }
+          box.innerHTML = "";
+          activeIdx = -1;
+          cands.forEach(function(p){
+            var b = document.createElement("button");
+            b.type = "button";
+            b.className = "suggest-item";
+            var tags = p.chars.map(function(c){
+              return '<span class="char-tag" style="--c:' + (CHARS[c] ? CHARS[c].color : "#888") + '"><span class="dot"></span>' + esc(CHARS[c] ? CHARS[c].name : c) + "</span>";
+            }).join("");
+            b.innerHTML = '<span class="s-name">' + esc(p.name) + '</span><span class="s-chars">' + tags + '</span><span class="s-cnt">' + p.count + "件</span>";
+            b.addEventListener("mousedown", function(e){
+              e.preventDefault();
+              input.value = p.name;
+              close();
+              onPick(p.name);
+            });
+            box.appendChild(b);
+          });
+          box.hidden = false;
+        }
+        input.addEventListener("input", function(){ onPick(input.value.trim()); open(); });
+        input.addEventListener("focus", open);
+        input.addEventListener("blur", function(){ setTimeout(close, 150); });
+        input.addEventListener("keydown", function(e){
+          var items = box.querySelectorAll(".suggest-item");
+          if (e.key === "Escape"){ close(); }
+          else if (e.key === "ArrowDown" || e.key === "ArrowUp"){
+            if (box.hidden || !items.length) return;
+            e.preventDefault();
+            activeIdx = e.key === "ArrowDown" ? Math.min(activeIdx + 1, items.length - 1) : Math.max(activeIdx - 1, 0);
+            Array.prototype.forEach.call(items, function(it, i){ it.classList.toggle("active", i === activeIdx); });
+          }
+          else if (e.key === "Enter"){
+            if (!box.hidden && items.length){
+              e.preventDefault();
+              var target = activeIdx >= 0 ? items[activeIdx] : items[0];
+              target.dispatchEvent(new MouseEvent("mousedown"));
+            }
+          }
+        });
+      }
+      attachSuggest("combo-name-a", function(val){ state.ca.name = val; render(); });
+      attachSuggest("combo-name-b", function(val){ state.cb.name = val; render(); });
+
+      /* ---------- data loading ---------- */
+      function loadData(){
+        var loadingEl = document.getElementById("loading");
+        var errorEl = document.getElementById("load-error");
+        loadingEl.hidden = false;
+        errorEl.hidden = true;
+        fetch(CSV_URL)
+          .then(function(r){ if (!r.ok) throw new Error("csv failed"); return r.text(); })
+          .then(function(text){
+            VIDEOS = buildVideos(parseCSV(text));
+            if (!VIDEOS.length) throw new Error("csv empty");
+            PLAYERS = buildPlayers();
+            loaded = true;
+            fillFilterSelects();
+            loadingEl.hidden = true;
+            render();
+          })
+          .catch(function(){
+            loaded = false;
+            loadingEl.hidden = true;
+            errorEl.hidden = false;
+          });
+      }
+      document.getElementById("retry").addEventListener("click", loadData);
+
+      render();
+      loadData();
+    </script>
+  </body>
+</html>
