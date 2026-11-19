@@ -212,6 +212,37 @@
       .badge-mirror{ top:10px; right:10px; background:var(--gold); color:#1a1405; }
       .badge-ts{ left:10px; bottom:10px; background:rgba(5,7,10,.85); color:#ffd97a; border:1px solid rgba(240,180,41,.5); font-family:"Archivo", sans-serif; font-weight:600; }
 
+      /* ---------- Spoiler thumbnail (ネタバレ列が〇のカード) ---------- */
+      .thumb.is-spoiler{ overflow:hidden; }
+      .thumb.is-spoiler img{ transition:filter .2s, transform .2s; }
+      .thumb.is-blurred img{ filter:blur(22px) brightness(.68); transform:scale(1.22); }
+      .thumb.is-blurred::after{ display:none; }
+      .spoiler-overlay{
+        position:absolute; inset:0; z-index:5;
+        display:none; flex-direction:column; align-items:center; justify-content:center; gap:12px;
+        background:rgba(5,7,10,.38); padding:16px; text-align:center;
+      }
+      .thumb.is-blurred .spoiler-overlay{ display:flex; }
+      .spoiler-label{
+        font-size:17px; font-weight:900; letter-spacing:.1em; color:#fff;
+        background:rgba(230,51,41,.92); border-radius:8px; padding:6px 14px;
+        box-shadow:0 4px 14px rgba(0,0,0,.5);
+      }
+      .spoiler-reveal{
+        min-height:42px; padding:9px 18px;
+        background:var(--surface2); border:1.5px solid var(--border-strong); color:var(--text);
+        border-radius:10px; font-weight:700; font-size:13.5px;
+      }
+      .spoiler-reveal:hover{ border-color:var(--gold); color:var(--gold); }
+      .spoiler-hide{
+        position:absolute; right:56px; bottom:12px; z-index:5;
+        display:none; align-items:center; min-height:32px; padding:5px 12px;
+        background:rgba(5,7,10,.85); border:1px solid var(--border-strong); color:var(--muted);
+        border-radius:999px; font-size:12px; font-weight:700;
+      }
+      .thumb.is-spoiler:not(.is-blurred) .spoiler-hide{ display:inline-flex; }
+      .spoiler-hide:hover{ color:var(--text); border-color:var(--gold); }
+
       .card-body{ padding:14px 16px 16px; display:flex; flex-direction:column; gap:10px; flex:1; }
       .card-meta{ display:flex; flex-wrap:wrap; gap:4px 12px; font-size:12.5px; color:var(--muted); }
       .card-meta .date{ font-family:"Archivo", sans-serif; font-weight:600; color:var(--text); letter-spacing:.03em; }
@@ -334,6 +365,7 @@
       @media (prefers-reduced-motion: reduce){
         html{ scroll-behavior:auto; }
         .card{ transition:none; }
+        .thumb.is-spoiler img{ transition:none; }
         .spinner{ animation:none; }
       }
     </style>
@@ -523,6 +555,14 @@
       }
 
       function buildVideos(rows){
+        // 「ネタバレ」見出しの列だけを読む（対戦キャラフィルタ列 index 9〜18 の〇/☆とは混同しない）
+        var spoilerCol = -1;
+        rows.forEach(function(r){
+          if (!r || spoilerCol >= 0) return;
+          for (var ci = 0; ci < r.length; ci++){
+            if (String(r[ci] || "").trim() === "ネタバレ"){ spoilerCol = ci; break; }
+          }
+        });
         var list = [];
         rows.forEach(function(r, idx){
           if (!r || r.length < 9) return;
@@ -532,6 +572,7 @@
           if (!p1 || url.indexOf("http") !== 0) return;
           var vi = parseVideoUrl(url);
           var dm = String(r[1] || "").trim().match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
+          var spoilerVal = spoilerCol >= 0 ? String(r[spoilerCol] || "").trim() : "";
           list.push({
             d: String(r[1] || "").trim(),
             sortKey: dm ? (Number(dm[1]) * 10000 + Number(dm[2]) * 100 + Number(dm[3])) : -1,
@@ -539,7 +580,8 @@
             p1: p1, c1: normChars(r[3]),
             p2: String(r[4] || "").trim(), c2: normChars(r[5]),
             fmt: String(r[6] || "").trim(), venue: String(r[7] || "").trim(),
-            url: url, id: vi.id, t: vi.t
+            url: url, id: vi.id, t: vi.t,
+            spoiler: spoilerVal === "○" || spoilerVal === "〇"
           });
         });
         // 開催日の新しい順。同日はシートの元の順序を維持。日付として読めない行は末尾に元の順序で残す
@@ -724,13 +766,20 @@
         var thumb = v.id
           ? '<img src="https://i.ytimg.com/vi/' + v.id + '/hqdefault.jpg" alt="" loading="lazy" onerror="this.parentNode.classList.add(\'broken\')" />'
           : "";
+        var spoilerCls = v.spoiler ? " is-spoiler is-blurred" : "";
+        var spoilerUI = v.spoiler
+          ? '<span class="spoiler-overlay"><span class="spoiler-label">ネタバレ注意</span>' +
+              '<button type="button" class="spoiler-reveal">サムネイルを表示</button></span>' +
+              '<button type="button" class="spoiler-hide">隠す</button>'
+          : "";
         return '<a class="card" href="' + esc(v.url) + '" target="_blank" rel="noopener" aria-label="' + esc(title) + '">' +
-          '<div class="thumb' + (v.id ? "" : " broken") + '">' +
+          '<div class="thumb' + (v.id ? "" : " broken") + spoilerCls + '">' +
             thumb +
             '<span class="no-thumb">NO THUMBNAIL</span>' +
             '<span class="badge badge-fmt">' + esc(v.fmt) + "</span>" +
             (mirror ? '<span class="badge badge-mirror">☆ 同キャラ戦</span>' : "") +
             ts +
+            spoilerUI +
           "</div>" +
           '<div class="card-body">' +
             '<div class="card-meta"><span class="date">' + esc(fmtDate(v.d)) + '</span><span class="venue">' + esc(v.venue) + "</span></div>" +
@@ -788,6 +837,33 @@
       document.getElementById("venue").addEventListener("change", function(e){ state.venue = e.target.value; render(); });
       document.getElementById("reset").addEventListener("click", resetAll);
       document.getElementById("empty-reset").addEventListener("click", resetAll);
+
+      /* ---------- spoiler thumbnail: 表示／隠す（ぼかし中はYouTubeへ飛ばない） ---------- */
+      document.getElementById("grid").addEventListener("click", function(e){
+        var t = e.target;
+        if (!t.closest) return;
+        var revealBtn = t.closest(".spoiler-reveal");
+        if (revealBtn){
+          e.preventDefault();
+          e.stopPropagation();
+          var th1 = revealBtn.closest(".thumb");
+          if (th1) th1.classList.remove("is-blurred");
+          return;
+        }
+        var hideBtn = t.closest(".spoiler-hide");
+        if (hideBtn){
+          e.preventDefault();
+          e.stopPropagation();
+          var th2 = hideBtn.closest(".thumb");
+          if (th2) th2.classList.add("is-blurred");
+          return;
+        }
+        // ぼかし状態のサムネイル部分をクリックしても動画へ遷移しない（カード本文側のリンクは通常通り）
+        if (t.closest(".thumb.is-blurred")){
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      });
 
       /* ---------- combo (char x player) selects ---------- */
       ["combo-char-a", "combo-char-b"].forEach(function(id){
