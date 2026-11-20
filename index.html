@@ -174,10 +174,18 @@
       .reset-btn:disabled{ opacity:.35; cursor:default; }
       .reset-btn:disabled:hover{ background:transparent; }
 
+      /* ---------- Thumbnail ON/OFF toggle ---------- */
+      .view-toggle{ display:inline-flex; align-items:center; gap:8px; }
+      .view-toggle-label{ font-size:12.5px; font-weight:700; color:var(--muted); white-space:nowrap; }
+      .view-switch{ margin-left:0; padding:2px; }
+      .view-switch button{ min-height:34px; padding:5px 13px; font-size:12.5px; }
+
       /* ---------- Cards ---------- */
       .grid{
         display:grid; grid-template-columns:1fr; gap:18px; margin-top:20px;
       }
+      .grid.no-thumb{ gap:12px; }
+      .grid.no-thumb .card-body{ padding:12px 14px 14px; gap:8px; }
       @media (min-width:640px){ .grid{ grid-template-columns:repeat(2,1fr); } }
       @media (min-width:1024px){ .grid{ grid-template-columns:repeat(3,1fr); } }
 
@@ -434,6 +442,13 @@
       <div class="statusbar" role="status" aria-live="polite">
         <div class="conds" id="conds"></div>
         <div class="hit-count"><strong id="hit-num">–</strong>件ヒット</div>
+        <div class="view-toggle">
+          <span class="view-toggle-label" id="thumb-toggle-label">サムネイル</span>
+          <div class="mode-switch view-switch" role="group" aria-labelledby="thumb-toggle-label">
+            <button type="button" id="thumb-on" aria-pressed="true">ON</button>
+            <button type="button" id="thumb-off" aria-pressed="false">OFF</button>
+          </div>
+        </div>
         <button type="button" class="reset-btn" id="reset">条件をリセット</button>
       </div>
 
@@ -483,7 +498,7 @@
       var PLAYERS = [];
       var loaded = false;
 
-      var state = { fmt: "", venue: "", ca: { char: "", name: "" }, cb: { char: "", name: "" } };
+      var state = { fmt: "", venue: "", ca: { char: "", name: "" }, cb: { char: "", name: "" }, showThumb: true };
 
       function isMirror(v){
         return v.c1.length === 1 && v.c2.length === 1 && v.c1[0] === v.c2[0];
@@ -772,17 +787,21 @@
               '<button type="button" class="spoiler-reveal">サムネイルを表示</button></span>' +
               '<button type="button" class="spoiler-hide">隠す</button>'
           : "";
+        var thumbHTML = state.showThumb
+          ? '<div class="thumb' + (v.id ? "" : " broken") + spoilerCls + '">' +
+              thumb +
+              '<span class="no-thumb">NO THUMBNAIL</span>' +
+              '<span class="badge badge-fmt">' + esc(v.fmt) + "</span>" +
+              (mirror ? '<span class="badge badge-mirror">☆ 同キャラ戦</span>' : "") +
+              ts +
+              spoilerUI +
+            "</div>"
+          : "";
+        var tsMeta = (!state.showThumb && v.t) ? '<span>▶ ' + fmtTime(v.t) + "〜から再生</span>" : "";
         return '<a class="card" href="' + esc(v.url) + '" target="_blank" rel="noopener" aria-label="' + esc(title) + '">' +
-          '<div class="thumb' + (v.id ? "" : " broken") + spoilerCls + '">' +
-            thumb +
-            '<span class="no-thumb">NO THUMBNAIL</span>' +
-            '<span class="badge badge-fmt">' + esc(v.fmt) + "</span>" +
-            (mirror ? '<span class="badge badge-mirror">☆ 同キャラ戦</span>' : "") +
-            ts +
-            spoilerUI +
-          "</div>" +
+          thumbHTML +
           '<div class="card-body">' +
-            '<div class="card-meta"><span class="date">' + esc(fmtDate(v.d)) + '</span><span class="venue">' + esc(v.venue) + "</span></div>" +
+            '<div class="card-meta"><span class="date">' + esc(fmtDate(v.d)) + '</span><span class="venue">' + esc(v.venue) + "</span>" + tsMeta + "</div>" +
             '<div class="matchup-line">' +
               '<div class="player"><span class="pname">' + esc(v.p1) + "</span>" + charTags(v.c1) + "</div>" +
               '<div class="vs-row">VS</div>' +
@@ -835,6 +854,18 @@
 
       document.getElementById("fmt").addEventListener("change", function(e){ state.fmt = e.target.value; render(); });
       document.getElementById("venue").addEventListener("change", function(e){ state.venue = e.target.value; render(); });
+
+      /* ---------- thumbnail ON/OFF ---------- */
+      function setThumb(show){
+        if (state.showThumb === show) return;
+        state.showThumb = show;
+        document.getElementById("thumb-on").setAttribute("aria-pressed", show ? "true" : "false");
+        document.getElementById("thumb-off").setAttribute("aria-pressed", show ? "false" : "true");
+        document.getElementById("grid").classList.toggle("no-thumb", !show);
+        render();
+      }
+      document.getElementById("thumb-on").addEventListener("click", function(){ setThumb(true); });
+      document.getElementById("thumb-off").addEventListener("click", function(){ setThumb(false); });
       document.getElementById("reset").addEventListener("click", resetAll);
       document.getElementById("empty-reset").addEventListener("click", resetAll);
 
