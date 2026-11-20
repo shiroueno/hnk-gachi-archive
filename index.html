@@ -180,6 +180,36 @@
       .view-switch{ margin-left:0; padding:2px; }
       .view-switch button{ min-height:34px; padding:5px 13px; font-size:12.5px; }
 
+      /* ---------- Status bar minimize ---------- */
+      .conds-summary{
+        display:none;
+        flex:1 1 120px; min-width:0;
+        font-size:13px; font-weight:700; color:var(--text);
+        white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+      }
+      .conds-summary .lbl{ color:var(--muted); font-size:12.5px; margin-right:6px; }
+      .status-toggle{
+        display:inline-flex; align-items:center; gap:6px;
+        min-height:34px; padding:6px 12px;
+        background:transparent; border:1px solid var(--border-strong); color:var(--muted);
+        border-radius:999px; font-weight:700; font-size:12.5px; white-space:nowrap;
+      }
+      .status-toggle:hover{ color:var(--text); border-color:var(--gold); }
+      .status-toggle .chev{ font-size:10px; line-height:1; }
+      .statusbar.is-minimized{ padding:8px 12px; gap:6px 10px; }
+      .statusbar.is-minimized .conds{ display:none; }
+      .statusbar.is-minimized .conds-summary{ display:block; }
+      .statusbar.is-minimized .reset-btn{ display:none; }
+      .statusbar.is-minimized .view-toggle-label{ display:none; }
+      .statusbar.is-minimized .hit-count{ margin-left:0; font-size:13.5px; }
+      .statusbar.is-minimized .hit-count strong{ font-size:19px; }
+      .statusbar.is-minimized .view-switch button{ min-height:30px; padding:4px 11px; }
+      .statusbar.is-minimized .status-toggle{ min-height:30px; padding:4px 10px; }
+      @media (max-width:480px){
+        .statusbar.is-minimized{ gap:6px 8px; padding:7px 10px; }
+        .statusbar.is-minimized .conds-summary{ font-size:12.5px; }
+      }
+
       /* ---------- Cards ---------- */
       .grid{
         display:grid; grid-template-columns:1fr; gap:18px; margin-top:20px;
@@ -439,8 +469,9 @@
         </div>
       </section>
 
-      <div class="statusbar" role="status" aria-live="polite">
+      <div class="statusbar" id="statusbar" role="status" aria-live="polite">
         <div class="conds" id="conds"></div>
+        <div class="conds-summary" id="conds-summary"></div>
         <div class="hit-count"><strong id="hit-num">–</strong>件ヒット</div>
         <div class="view-toggle">
           <span class="view-toggle-label" id="thumb-toggle-label">サムネイル</span>
@@ -449,6 +480,7 @@
             <button type="button" id="thumb-off" aria-pressed="false">OFF</button>
           </div>
         </div>
+        <button type="button" class="status-toggle" id="status-toggle" aria-expanded="true" aria-controls="conds"><span class="chev" aria-hidden="true">▲</span><span id="status-toggle-text">最小化</span></button>
         <button type="button" class="reset-btn" id="reset">条件をリセット</button>
       </div>
 
@@ -822,6 +854,7 @@
         observeTitleSlots();
 
         var conds = [];
+        var condsPlain = [];
         [["サイドA", state.ca], ["サイドB", state.cb]].forEach(function(pair){
           var cond = pair[1];
           if (cond.char || cond.name){
@@ -829,16 +862,37 @@
             if (cond.name) txt += cond.name;
             if (cond.char) txt += (cond.name ? "（" : "") + CHARS[cond.char].name + (cond.name ? "）" : "");
             conds.push('<span class="cond-pill">' + esc(txt) + "</span>");
+            condsPlain.push(txt);
           }
         });
-        if (state.fmt) conds.push('<span class="cond-pill">形式：' + esc(state.fmt) + "</span>");
-        if (state.venue) conds.push('<span class="cond-pill">店舗：' + esc(state.venue) + "</span>");
+        if (state.fmt){ conds.push('<span class="cond-pill">形式：' + esc(state.fmt) + "</span>"); condsPlain.push("形式：" + state.fmt); }
+        if (state.venue){ conds.push('<span class="cond-pill">店舗：' + esc(state.venue) + "</span>"); condsPlain.push("店舗：" + state.venue); }
 
         var hasCond = !!(state.fmt || state.venue || state.ca.char || state.ca.name || state.cb.char || state.cb.name);
         document.getElementById("conds").innerHTML =
           '<span class="lbl">現在の条件</span>' + (hasCond ? conds.join("") : '<span class="cond-none">指定なし（全件表示）</span>');
+        var summaryEl = document.getElementById("conds-summary");
+        var summaryText = hasCond ? condsPlain.join(" ／ ") : "指定なし（全件表示）";
+        summaryEl.innerHTML = '<span class="lbl">現在の条件</span>' + esc(summaryText);
+        summaryEl.setAttribute("title", "現在の条件：" + summaryText);
         document.getElementById("reset").disabled = !hasCond;
       }
+
+      /* ---------- status bar minimize (スマホでは最初から最小化) ---------- */
+      var statusMinimized = window.innerWidth <= 760;
+      function applyStatusMinimized(){
+        var bar = document.getElementById("statusbar");
+        bar.classList.toggle("is-minimized", statusMinimized);
+        var btn = document.getElementById("status-toggle");
+        btn.setAttribute("aria-expanded", statusMinimized ? "false" : "true");
+        btn.querySelector(".chev").textContent = statusMinimized ? "▼" : "▲";
+        document.getElementById("status-toggle-text").textContent = statusMinimized ? "条件を表示" : "最小化";
+      }
+      document.getElementById("status-toggle").addEventListener("click", function(){
+        statusMinimized = !statusMinimized;
+        applyStatusMinimized();
+      });
+      applyStatusMinimized();
 
       function resetAll(){
         state.fmt = ""; state.venue = "";
