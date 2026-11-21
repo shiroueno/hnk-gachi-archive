@@ -511,16 +511,16 @@
       var CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSTc23eXmAJr4Ba8Kgw0kzffFtWSmEEJ_kxQ_EEEuSlZ66jN7vHE7NTUBReBEdnBduvIfnGFaqRKc4z/pub?output=csv";
 
       var CHARS = {
-        KE: { name: "ケンシロウ", color: "#5aa9ff" },
-        RA: { name: "ラオウ",     color: "#f0b429" },
-        TO: { name: "トキ",       color: "#e8edf5" },
-        JA: { name: "ジャギ",     color: "#ff6b4a" },
-        SH: { name: "シン",       color: "#ff8fb2" },
-        RE: { name: "レイ",       color: "#69db7c" },
-        JU: { name: "ユダ",       color: "#b197fc" },
-        TH: { name: "サウザー",   color: "#ff5252" },
-        HE: { name: "ハート様",   color: "#ffa94d" },
-        MA: { name: "マミヤ",     color: "#3fd9c0" }
+        KE: { name: "ケンシロウ", color: "#2878C8" },
+        RA: { name: "ラオウ",     color: "#9AA5B1" },
+        TO: { name: "トキ",       color: "#E8E8E8" },
+        JA: { name: "ジャギ",     color: "#813C9B" },
+        SH: { name: "シン",       color: "#D83232" },
+        RE: { name: "レイ",       color: "#58C5D8" },
+        JU: { name: "ユダ",       color: "#E879A9" },
+        TH: { name: "サウザー",   color: "#D6A52A" },
+        HE: { name: "ハート様",   color: "#E98B36" },
+        MA: { name: "マミヤ",     color: "#429B65" }
       };
       var CHAR_ORDER = ["KE","RA","TO","JA","SH","RE","JU","TH","HE","MA"];
       var NAME2CODE = {};
@@ -769,12 +769,35 @@
           sel.appendChild(o);
         });
       }
+      // 形式は数字を数値として扱う昇順（例：1時間→2時間→3先→5先→10先→20戦…）。
+      // 新しい形式が増えても自動で数値順に入る。
+      var FMT_COLLATOR = ("Intl" in window && Intl.Collator) ? new Intl.Collator("ja", { numeric: true }) : null;
+      function compareFmt(a, b){
+        return FMT_COLLATOR ? FMT_COLLATOR.compare(a, b) : a.localeCompare(b, "ja");
+      }
+      // 開催店舗は都道府県コード順（北→南）。店舗名は「都道府県名 店舗名」形式が前提で、
+      // 先頭の都道府県名で順位を決め、同じ都道府県内は五十音順にする。
+      // 都道府県が判別できない店舗（「不明」など）は最後に五十音順で並べる。
+      var PREF_ORDER = ["北海道","青森","岩手","宮城","秋田","山形","福島","茨城","栃木","群馬","埼玉","千葉","東京","神奈川","新潟","富山","石川","福井","山梨","長野","岐阜","静岡","愛知","三重","滋賀","京都","大阪","兵庫","奈良","和歌山","鳥取","島根","岡山","広島","山口","徳島","香川","愛媛","高知","福岡","佐賀","長崎","熊本","大分","宮崎","鹿児島","沖縄"];
+      function prefRank(venue){
+        for (var i = 0; i < PREF_ORDER.length; i++){
+          if (venue.indexOf(PREF_ORDER[i]) === 0) return i;
+        }
+        return PREF_ORDER.length;
+      }
+      function compareVenue(a, b){
+        var ra = prefRank(a), rb = prefRank(b);
+        if (ra !== rb) return ra - rb;
+        return FMT_COLLATOR ? FMT_COLLATOR.compare(a, b) : a.localeCompare(b, "ja");
+      }
       function fillFilterSelects(){
         var fmts = [], venues = [];
         VIDEOS.forEach(function(v){
           if (v.fmt && fmts.indexOf(v.fmt) < 0) fmts.push(v.fmt);
           if (v.venue && venues.indexOf(v.venue) < 0) venues.push(v.venue);
         });
+        fmts.sort(compareFmt);
+        venues.sort(compareVenue);
         fillSelect("fmt", fmts);
         fillSelect("venue", venues);
       }
